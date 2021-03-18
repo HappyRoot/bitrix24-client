@@ -23,3 +23,31 @@ To use, with an ```IServiceCollection```:
   Bitrix24Connector(HttpClient client)  
   ```
   This is a bad way! It is highly recommended to use Microsoft.Extensions.DependencyInjection with ```services.AddHttpClient <Bitrix24Connector>()```
+  
+  ### Usage
+   ```csharp
+   // Build
+   var query = Bitrix24QueryBuilder
+       .Create()
+       .AddSelect("TITLE")
+       .AddFilter("ID", 12)
+       .Build();
+    
+   // Get deals collection
+   var res = await _connector.Deals.ListAsync(query);
+   ```
+   Также любые команды можно выполнять с помощью ```IBitrix24RequestHandler```:
+   ```csharp
+    public interface IBitrix24RequestHandler
+    {
+        Task<string> ExecuteAsync(string command, object query = null);
+        Task<Bitrix24Response<T>> ExecuteAsync<T>(string command, object query = null);
+        Task<T> ExecuteDefaultAsync<T>(string command, object query = null);
+    }
+   ``` 
+- command - example: user.get
+- query - Bitrix24Query or any custom object
+```csharp
+    var users = await _connector.RequestHandler.ExecuteAsync<IEnumerable<Bitrix24User>>("user.get", query);
+ ```
+   
