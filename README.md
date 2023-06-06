@@ -1,6 +1,6 @@
 ![Nuget](https://img.shields.io/nuget/v/Bitrix24.Connector)
 ![Nuget](https://img.shields.io/nuget/dt/Bitrix24.Connector)
-# Bitrix24 .NET Connector
+# Bitrix24 .NET Client
 Bitrix24 Connector is a small simple library built to work with Rest API Bitrix24. Currently under development...
 ### Getting started
 Bitrix24 connector can be registered and used with Microsoft.Extensions.DependencyInjection. The HttpClient instance is injected in DI container (IHttpClientFactory).
