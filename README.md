@@ -25,15 +25,26 @@ or
 This is a bad way! It is highly recommended to use Microsoft.Extensions.DependencyInjection with ```services.AddHttpClient<IBitrix24Client, Bitrix24Client>```
   
 ### Usage
+- FirstOrDefaultAsync
 ```csharp
    var contact = await _client.Crm.Contacts
          .Select(s => s.Id, s => s.Phone, s => s.Email, 
                s => s.AddressCity,
                s => s.Birthdate, s => s.Name,
                s => s.LastName, s => s.SecondName, s => s.DateModify)
-         .FirstOrDefaultAsync(x => x.Email == "mrbrown@mail.com")
+         .FirstOrDefaultAsync(x => x.Email == "mrbrown@mail.com", cancellationToken)
          .ConfigureAwait(false);
 ```   
+- ToListAsync
+```csharp 
+   var contacts = await _connector.Crm.Contacts
+         .Select(s => s.Id, s => s.Phone, s => s.Email, 
+               s => s.AddressCity,
+               s => s.Birthdate, s => s.Name,
+               s => s.LastName, s => s.SecondName, s => s.DateModify)
+         .ToListAsync(x => x.Email == "mrbrown@mail.com", cancellationToken)
+         .ConfigureAwait(false);
+```
 #### Inheritance
 ```csharp
    public class Bitrix24Customer : Bitrix24Contact
@@ -50,9 +61,32 @@ This is a bad way! It is highly recommended to use Microsoft.Extensions.Dependen
                s => s.AddressCity, s => s.ParentId,
                s => s.Birthdate, s => s.Name, s => s.CustomerId,
                s => s.LastName, s => s.SecondName, s => s.DateModify)
-         .FirstOrDefaultAsync<Bitrix24Customer>(x => x.Email == "mrbrown@mail.com" && x.ParentId == 1)
-         .ConfigureAwait(false);        
+         .FirstOrDefaultAsync<Bitrix24Customer>(x => x.Email == "mrbrown@mail.com" && x.ParentId == 1, cancellationToken)
+         .ConfigureAwait(false);
+         
+   var contacts = await _connector.Crm.Contacts
+         .Select<Bitrix24Customer>(s => s.Id, s => s.Phone, s => s.Email, 
+               s => s.AddressCity, s => s.ParentId,
+               s => s.Birthdate, s => s.Name,
+               s => s.LastName, s => s.SecondName, s => s.DateModify)
+         .ToListAsync<Bitrix24Customer>(x => x.Email == "mrbrown@mail.com" && x.ParentId == 1, cancellationToken)
+         .ConfigureAwait(false);         
 ``` 
+#### Filter (IQueryable)
+
+```csharp
+var query = _connector.Crm.Contacts
+    .Select(s => s.Id, s => s.Phone, s => s.Email,
+        s => s.AddressCity,
+        s => s.Birthdate, s => s.Name,
+        s => s.LastName, s => s.SecondName, s => s.DateModify)
+    .Filter(x => x.Email == "mrbrown@mail.com");
+    
+var contacts = await query
+   .ToListAsync(cancellationToken)
+   .ConfigureAwait(false);
+``` 
+
 Also, any commands can be executed using ```IBitrix24RequestHandler```:
 ```csharp
  public interface IBitrix24RequestHandler
