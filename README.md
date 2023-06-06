@@ -10,32 +10,49 @@ To use, with an ```IServiceCollection```:
  
  // ....
   
- services.AddBitrix24Connector(url);
+services.AddBitrix24Client("Bitrix24:Hook");
 ```
 Or create Bitirx24 connector manually using constructors:
 ```csharp 
  // Better Approach
- var con = new Bitrix24Connector(url); 
+ var client = new Bitrix24Client(url); 
 ```
 or
 ```csharp
  // Bad way
- Bitrix24Connector(HttpClient client)  
+ var client = Bitrix24Client(HttpClient client)  
 ```
-This is a bad way! It is highly recommended to use Microsoft.Extensions.DependencyInjection with ```services.AddHttpClient <Bitrix24Connector>()```
+This is a bad way! It is highly recommended to use Microsoft.Extensions.DependencyInjection with ```services.AddHttpClient<IBitrix24Client, Bitrix24Client>```
   
 ### Usage
 ```csharp
- // Build query
- var query = Bitrix24QueryBuilder
-     .Create()
-     .AddSelect("TITLE")
-     .AddFilter("ID", 12)
-     .Build();
-
- // Get deals collection
- var res = await _connector.Deals.ListAsync(query);
+   var contact = await _client.Crm.Contacts
+         .Select(s => s.Id, s => s.Phone, s => s.Email, 
+               s => s.AddressCity,
+               s => s.Birthdate, s => s.Name,
+               s => s.LastName, s => s.SecondName, s => s.DateModify)
+         .FirstOrDefaultAsync(x => x.Email == "mrbrown@mail.com")
+         .ConfigureAwait(false);
 ```   
+#### Inheritance
+```csharp
+   public class Bitrix24Customer : Bitrix24Contact
+   {
+       [Bitrix24Property("UF_PARENT_ID")]
+       public int? ParentId { get; set; }
+
+       [Bitrix24Property("UF_GUID")]
+       public Guid? CustomerId { get; set; }
+   }
+        
+   var contact = await _client.Crm.Contacts
+         .Select<Bitrix24Customer>(s => s.Id, s => s.Phone, s => s.Email, 
+               s => s.AddressCity, s => s.ParentId,
+               s => s.Birthdate, s => s.Name, s => s.CustomerId,
+               s => s.LastName, s => s.SecondName, s => s.DateModify)
+         .FirstOrDefaultAsync<Bitrix24Customer>(x => x.Email == "mrbrown@mail.com" && x.ParentId == 1)
+         .ConfigureAwait(false);        
+``` 
 Also, any commands can be executed using ```IBitrix24RequestHandler```:
 ```csharp
  public interface IBitrix24RequestHandler
